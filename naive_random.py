@@ -1,14 +1,12 @@
 import random
 import gym
 import tensorflow as tf
-import pickle
 
 NUM_OF_EPISODES = 100
 FRAMES_PER_EPISODE = 1000
-BATCH_SIZE = 32
 GAME_ID = "CartPole-v1"
 CPU_ID = "/device:CPU:0"
-NUM_OF_MODELS = 5
+NUM_OF_MODELS = 4
 
 
 if __name__ == "__main__":
@@ -22,7 +20,7 @@ if __name__ == "__main__":
             for episode in range(NUM_OF_EPISODES):
                 current_state = game.reset()
                 for frame in range(FRAMES_PER_EPISODE):
-                    #game.render()
+                    game.render()
                     action = random.randrange(num_of_actions)
                     new_state, gained_reward, is_done, info = game.step(action)
                     if is_done:
