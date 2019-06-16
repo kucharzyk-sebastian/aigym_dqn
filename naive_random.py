@@ -14,8 +14,8 @@ if __name__ == "__main__":
     for model in range(NUM_OF_AGENTS):
         scores = []
         for episode in range(NUM_OF_EPISODES):
-            score = 0
             current_state = game.reset()
+            score = 0
             for frame in range(FRAMES_PER_EPISODE):
                 # game.render()
                 action = random.randrange(num_of_actions)
@@ -23,8 +23,8 @@ if __name__ == "__main__":
                 score += gained_reward
                 if is_done:
                     break
-                scores.append(score)
-        avgs.append(sum(scores)/len(scores))
+            scores.append(score)
+        avgs.append(sum(scores) / len(scores))
     game.close()
     for i, avg in enumerate(avgs):
         print("Model {} has avarage: {}".format(i, avg))
