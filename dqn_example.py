@@ -3,7 +3,7 @@ import gym
 import numpy as np
 from collections import deque
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 import tensorflow as tf
 
@@ -18,7 +18,7 @@ class AdvancedDqnNpc:
     def __init__(self, num_of_inputs, num_of_outputs):
         self._num_of_inputs = num_of_inputs
         self._num_of_outputs = num_of_outputs
-        self._memory = deque(maxlen=2000)
+        self._memory = deque(maxlen=20000)
         self.gamma = 0.95    # discount rate
         self._exploration_rate = 1.0  # exploration rate
         self._exploration_rate_min = 0.1
@@ -29,8 +29,10 @@ class AdvancedDqnNpc:
     def _init_model(self):
         # Neural Net for Deep-Q learning Model
         model = Sequential()
-        model.add(Dense(24, input_dim=self._num_of_inputs, activation='relu'))
-        model.add(Dense(24, activation='relu'))
+        model.add(Dense(150, input_dim=self._num_of_inputs, activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(120, activation='relu'))
+        model.add(Dropout(0.5))
         model.add(Dense(self._num_of_outputs, activation='linear'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))
@@ -71,7 +73,7 @@ class AdvancedDqnNpc:
 
 if __name__ == "__main__":
     with tf.device('/device:CPU:0'):
-        env = gym.make('CartPole-v1')
+        env = gym.make('LunarLander-v2')
         state_size = env.observation_space.shape[0]
         action_size = env.action_space.n
         agent = AdvancedDqnNpc(state_size, action_size)
@@ -80,24 +82,27 @@ if __name__ == "__main__":
         batch_size = 32
 
         for e in range(EPISODES):
+            score = 0
             state = env.reset()
             state = np.reshape(state, [1, state_size])
             for time in range(1000):
-                # env.render()
+                env.render()
                 action = agent.predict(state)
                 next_state, reward, done, info = env.step(action)
-                reward = reward if not done else -10
+                score += reward
+                reward += reward
                 next_state = np.reshape(next_state, [1, state_size])
                 agent.retain(state, action, reward, next_state, done)
                 state = next_state
                 if done:
                     print("episode: {}/{}, score: {}, e: {:.2}, time {}"
-                          .format(e, EPISODES, time, agent._exploration_rate, time))
+                          .format(e, EPISODES, score, agent._exploration_rate, time))
                     break
                 if len(agent._memory) > batch_size:
                     agent.replay(batch_size)
             if not done:
+                    print(reward)
                     print("episode: {}/{}, score: {}, e: {:.2}, time {}"
-                          .format(e, EPISODES, time, agent._exploration_rate, time))
+                          .format(e, EPISODES, score, agent._exploration_rate, time))
             if e % 10 == 0:
                 agent.save("./save/cartpole-dqn.h5")
