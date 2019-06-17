@@ -28,7 +28,7 @@ class SimpleDqnNpcV2:
         self._exploration_rate_min = 0.1
         self._exploration_rate_decay = 0.997
         self._discout_rate = 0.95
-        self.memory = deque(maxlen=1024)
+        self.memory = deque(maxlen=4096)
         self._init_model()
 
     def _init_model(self):
@@ -88,8 +88,8 @@ class SimpleDqnNpcV2:
 
 NUM_OF_AGENTS = 1
 NUM_OF_EPISODES = 100
-FRAMES_PER_EPISODE = 400
-BATCH_SIZE = 16
+FRAMES_PER_EPISODE = 1000
+BATCH_SIZE = 32
 GAME_ID = "LunarLander-v2"
 
 if __name__ == "__main__":

@@ -12,17 +12,17 @@ import logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 logging.getLogger('tensorflow').disabled = True
 
-EPISODES = 200
+EPISODES = 201
 
 class AdvancedDqnNpc:
     def __init__(self, num_of_inputs, num_of_outputs):
         self._num_of_inputs = num_of_inputs
         self._num_of_outputs = num_of_outputs
-        self._memory = deque(maxlen=20000)
+        self._memory = deque(maxlen=2048)
         self.gamma = 0.95    # discount rate
         self._exploration_rate = 1.0  # exploration rate
         self._exploration_rate_min = 0.1
-        self._exploration_rate_decay = 0.999
+        self._exploration_rate_decay = 0.9994
         self.learning_rate = 0.001
         self._model = self._init_model()
 
@@ -30,9 +30,7 @@ class AdvancedDqnNpc:
         # Neural Net for Deep-Q learning Model
         model = Sequential()
         model.add(Dense(150, input_dim=self._num_of_inputs, activation='relu'))
-        model.add(Dropout(0.5))
         model.add(Dense(120, activation='relu'))
-        model.add(Dropout(0.5))
         model.add(Dense(self._num_of_outputs, activation='linear'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))
@@ -61,8 +59,6 @@ class AdvancedDqnNpc:
                 self._model.fit(x=state, y=target_f, epochs=1, verbose=0)
         if self._exploration_rate > self._exploration_rate_min:
             self._exploration_rate *= self._exploration_rate_decay
-        else:
-            self._exploration_rate = 0.0
 
     def load(self, name):
         self._model.load_weights(name)
@@ -77,9 +73,9 @@ if __name__ == "__main__":
         state_size = env.observation_space.shape[0]
         action_size = env.action_space.n
         agent = AdvancedDqnNpc(state_size, action_size)
-        # agent.load("./save/cartpole-dqn.h5")
+        # agent.load("advanced1-dqn.h5")
         done = False
-        batch_size = 32
+        batch_size = 16
 
         for e in range(EPISODES):
             score = 0
@@ -90,7 +86,8 @@ if __name__ == "__main__":
                 action = agent.predict(state)
                 next_state, reward, done, info = env.step(action)
                 score += reward
-                reward += reward
+                if reward < 0:
+                    reward *= 100
                 next_state = np.reshape(next_state, [1, state_size])
                 agent.retain(state, action, reward, next_state, done)
                 state = next_state
@@ -99,10 +96,10 @@ if __name__ == "__main__":
                           .format(e, EPISODES, score, agent._exploration_rate, time))
                     break
                 if len(agent._memory) > batch_size:
-                    agent.replay(batch_size)
+                   agent.replay(batch_size)
             if not done:
                     print(reward)
                     print("episode: {}/{}, score: {}, e: {:.2}, time {}"
                           .format(e, EPISODES, score, agent._exploration_rate, time))
-            if e % 10 == 0:
-                agent.save("./save/cartpole-dqn.h5")
+            #if e % 10 == 0:
+                #agent.save("advanced-dqn.h5")
