@@ -86,9 +86,9 @@ class SimpleDqnNpcV2:
         self._model.save_weights(model_path)
 
 
-NUM_OF_AGENTS = 1
-NUM_OF_EPISODES = 100
-FRAMES_PER_EPISODE = 400
+NUM_OF_AGENTS = 4
+NUM_OF_EPISODES = 200
+FRAMES_PER_EPISODE = 1000
 BATCH_SIZE = 16
 GAME_ID = "LunarLander-v2"
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
                 score = 0
                 current_state = np.reshape(game.reset(), [1, observation_size])
                 for frame in range(FRAMES_PER_EPISODE):
-                    game.render()
+                    # game.render()
                     action = npc.act(current_state)
                     new_state, gained_reward, is_done, info = game.step(action)
                     new_state = np.reshape(new_state, [1, observation_size])
@@ -120,6 +120,7 @@ if __name__ == "__main__":
                               .format(episode, NUM_OF_EPISODES, score, npc._exploration_rate, len(npc.memory), npc.memory.maxlen, frame))
                         break
                 scores.append(score)
+                print("current avg ", sum(scores) / len(scores))
                 if not is_done:
                     print("episode: {0}/{1}; result: {2}; used memory: {3}/{4}; time: {5}"
                           .format(episode, NUM_OF_EPISODES, score, len(npc.memory), npc.memory.maxlen, frame))

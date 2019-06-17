@@ -18,11 +18,11 @@ class AdvancedDqnNpc:
     def __init__(self, num_of_inputs, num_of_outputs):
         self._num_of_inputs = num_of_inputs
         self._num_of_outputs = num_of_outputs
-        self._memory = deque(maxlen=2048)
+        self._memory = deque(maxlen=20000)
         self.gamma = 0.95    # discount rate
         self._exploration_rate = 1.0  # exploration rate
         self._exploration_rate_min = 0.1
-        self._exploration_rate_decay = 0.9994
+        self._exploration_rate_decay = 0.995
         self.learning_rate = 0.001
         self._model = self._init_model()
 
@@ -30,7 +30,7 @@ class AdvancedDqnNpc:
         # Neural Net for Deep-Q learning Model
         model = Sequential()
         model.add(Dense(150, input_dim=self._num_of_inputs, activation='relu'))
-        model.add(Dense(120, activation='relu'))
+        model.add(Dense(120, activation='sigmoid'))
         model.add(Dense(self._num_of_outputs, activation='linear'))
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.learning_rate))

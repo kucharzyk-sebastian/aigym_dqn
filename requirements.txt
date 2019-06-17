@@ -1,0 +1,11 @@
+gym
+numpy
+scipy
+tensorflow
+tensorflow-gpu
+keras
+ipython==3.2.3
+jupyter
+six
+protobuf==3.6.0
+wheel

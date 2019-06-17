@@ -3,7 +3,7 @@ import gym
 import numpy as np
 from collections import deque
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 import tensorflow as tf
 
@@ -13,7 +13,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 logging.getLogger('tensorflow').disabled = True
 
 
-class SimpleDqnNpcV2:
+class SimpleDqnNpcV3:
     "Klasa implementująca agenta DQN opartego o prostą sieć neuronową"
 
     def __init__(self, num_of_inputs, num_of_outputs):
@@ -38,8 +38,10 @@ class SimpleDqnNpcV2:
         """
 
         self._model = Sequential()
-        self._model.add(Dense(self._num_of_inputs, input_dim=self._num_of_inputs, activation='relu'))
-        self._model.add(Dense(self._num_of_inputs * 2, activation='sigmoid'))
+        self._model.add(Dense(5 * self._num_of_inputs, input_dim=self._num_of_inputs, activation='relu'))
+        self._model.add(Dropout(0.15))
+        self._model.add(Dense(4 * self._num_of_inputs, activation='sigmoid'))
+        self._model.add(Dropout(0.15))
         self._model.add(Dense(self._num_of_outputs, activation='linear'))
         self._model.compile(optimizer=Adam(), loss='mean_squared_error')
 
@@ -89,7 +91,7 @@ class SimpleDqnNpcV2:
 NUM_OF_AGENTS = 1
 NUM_OF_EPISODES = 100
 FRAMES_PER_EPISODE = 1000
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 GAME_ID = "LunarLander-v2"
 
 if __name__ == "__main__":
@@ -97,7 +99,7 @@ if __name__ == "__main__":
         game = gym.make(GAME_ID)
         num_of_actions = game.action_space.n
         observation_size = game.observation_space.shape[0]
-        npc = SimpleDqnNpcV2(observation_size, num_of_actions)
+        npc = SimpleDqnNpcV3(observation_size, num_of_actions)
         is_done = False
         avgs = []
         for model in range(NUM_OF_AGENTS):
@@ -106,7 +108,7 @@ if __name__ == "__main__":
                 score = 0
                 current_state = np.reshape(game.reset(), [1, observation_size])
                 for frame in range(FRAMES_PER_EPISODE):
-                    game.render()
+                    # game.render()
                     action = npc.act(current_state)
                     new_state, gained_reward, is_done, info = game.step(action)
                     new_state = np.reshape(new_state, [1, observation_size])
@@ -123,7 +125,8 @@ if __name__ == "__main__":
                 if not is_done:
                     print("episode: {0}/{1}; result: {2}; used memory: {3}/{4}; time: {5}"
                           .format(episode, NUM_OF_EPISODES, score, len(npc.memory), npc.memory.maxlen, frame))
-            npc.save("simple_dqn_" + str(model) + ".h5")
+                npc.save("simple_dqn_" + str(model) + ".h5")
+
             avgs.append(sum(scores) / len(scores))
         for i, avg in enumerate(avgs):
             print("Model {} has avarage: {}".format(i, avg))
