@@ -89,44 +89,55 @@ class SimpleDqnNpcV3:
 
 
 NUM_OF_AGENTS = 4
-NUM_OF_EPISODES = 75
+NUM_OF_EPISODES = 50
 FRAMES_PER_EPISODE = 1000
-BATCH_SIZE = 16
 GAME_ID = "LunarLander-v2"
+NUM_OF_GENERATIONS = 10
 
 if __name__ == "__main__":
     with tf.device('/device:CPU:0'):
         game = gym.make(GAME_ID)
         num_of_actions = game.action_space.n
         observation_size = game.observation_space.shape[0]
-        npc = SimpleDqnNpcV3(observation_size, num_of_actions)
+        npcs = []
+        for i in range(NUM_OF_AGENTS):
+            npcs.append(SimpleDqnNpcV3(observation_size, num_of_actions))
+            npcs[i].load("dqn_v3_{}.h5".format(i))
         is_done = False
-        avgs = []
-        for model in range(NUM_OF_AGENTS):
-            scores = []
-            for episode in range(NUM_OF_EPISODES):
-                score = 0
-                current_state = np.reshape(game.reset(), [1, observation_size])
-                for frame in range(FRAMES_PER_EPISODE):
-                    # game.render()
-                    action = npc.act(current_state)
-                    new_state, gained_reward, is_done, info = game.step(action)
-                    new_state = np.reshape(new_state, [1, observation_size])
-                    npc.retain(current_state, action, gained_reward, new_state, is_done)
-                    score += gained_reward
-                    current_state = new_state
-                    if len(npc.memory) > BATCH_SIZE:
-                        npc.replay(BATCH_SIZE)
-                    if is_done:
-                        print("episode: {0}/{1}; result: {2}; e: {3} used memory: {4}/{5}; time: {5}"
-                              .format(episode, NUM_OF_EPISODES, score, npc._exploration_rate, len(npc.memory), npc.memory.maxlen, frame))
-                        break
-                scores.append(score)
-                if not is_done:
-                    print("episode: {0}/{1}; result: {2}; used memory: {3}/{4}; time: {5}"
-                          .format(episode, NUM_OF_EPISODES, score, len(npc.memory), npc.memory.maxlen, frame))
-                npc.save("evo_dqn_" + str(model) + ".h5")
-            avgs.append(sum(scores) / len(scores))
-        for i, avg in enumerate(avgs):
-            print("Model {} has avarage: {}".format(i, avg))
-        print("Overall avg: {}".format(sum(avgs) / len(avgs)))
+        for gen in range(NUM_OF_GENERATIONS):
+            avgs = []
+            for model in range(NUM_OF_AGENTS):
+                scores = []
+                for episode in range(NUM_OF_EPISODES):
+                    score = 0
+                    current_state = np.reshape(game.reset(), [1, observation_size])
+                    for frame in range(FRAMES_PER_EPISODE):
+                        # game.render()
+                        action = npcs[model].act(current_state)
+                        new_state, gained_reward, is_done, info = game.step(action)
+                        new_state = np.reshape(new_state, [1, observation_size])
+                        score += gained_reward
+                        current_state = new_state
+                        if is_done:
+                            break
+                    scores.append(score)
+                avgs.append(sum(scores) / len(scores))
+            print("Avarages in generation {} are as follow: {}".format(gen, avgs))
+
+            if gen != (NUM_OF_GENERATIONS - 1):
+                avgs = np.array(avgs)
+                parents_idx = (-avgs).argsort()[:2]
+
+                parent1_weights = npcs[parents_idx[0]]._model.get_weights()
+                parent2_weights = npcs[parents_idx[1]]._model.get_weights()
+                new_weights = parent1_weights
+                i = 0
+                while i < len(new_weights)/2:
+                    if np.random.rand() < 0.5:
+                        new_weights[i] = parent2_weights[i]
+                        new_weights[i + 1] = parent2_weights[i + 1]
+                    i+=2
+                worst_agent_idx = np.argmin(avgs)
+                npcs[worst_agent_idx]._model.set_weights(new_weights)
+
+        print("Avarage of super agent is: {}".format(np.amax(avgs)))
