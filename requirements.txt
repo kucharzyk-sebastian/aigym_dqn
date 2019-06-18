@@ -4,8 +4,9 @@ scipy
 tensorflow
 tensorflow-gpu
 keras
-ipython==3.2.3
+ipython
 jupyter
 six
 protobuf==3.6.0
 wheel
+pandoc
