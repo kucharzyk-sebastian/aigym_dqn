@@ -30,7 +30,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ## Deployment
 
-1. After applying changes to any python script, update the content of report.ipynb
+1. After applying changes to any python script, update the content of [report.ipynb](report.ipynb)
 
 ## Built With
 
