@@ -34,7 +34,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ## Built With
 
-* [PIP]https://pip.pypa.io/en/stable/) - Python package installer
+* [PIP](https://pip.pypa.io/en/stable/) - Python package installer
 
 
 ## Authors
