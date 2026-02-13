@@ -7,6 +7,6 @@ keras
 ipython
 jupyter
 six
-protobuf==3.6.0
+protobuf==5.29.6
 wheel
 pandoc
